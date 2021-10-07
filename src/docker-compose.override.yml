@@ -26,6 +26,17 @@ services:
     volumes:
         - postgres_data:/var/lib/postgressql/data/
 
+  pgadmin:
+    container_name: pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@aspnetrun1.com
+      - PGADMIN_DEFAULT_PASSWORD=admin1234
+    restart: always
+    ports:
+        - "5050:80"
+    volumes:
+      - pgadmin_data:/root/.pgadmin
+
   portainer:
     container_name: portainer
     restart: always
@@ -51,8 +62,29 @@ services:
     container_name: basket.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "CacheSettings:ConnectionString=basketdb:6379"
+      - "CacheSettings__ConnectionString=basketdb:6379,abortConnect=false"
+      - "GrpcSettings:DiscountUrl=discount.grpc"
     depends_on:
       - basketdb
     ports:
       - "8001:80"
+
+  discount.grpc:
+    container_name: discount.grpc
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "DatabaseSettings:ConnectionString=Server=discountdb;Port=5432;Database=DiscountDb;User Id=admin;Password=admin123;"
+    depends_on:
+      - discountdb
+    ports:
+      - "8003:80"
+
+  discount.api:
+    container_name: discount.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "DatabaseSettings:ConnectionString=Server=discountdb;Port=5432;Database=DiscountDb;User Id=admin;Password=admin123;"
+    depends_on:
+      - discountdb
+    ports:
+      - "8002:80"
